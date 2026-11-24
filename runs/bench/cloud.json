@@ -1,0 +1,33 @@
+{
+  "label": "cloud",
+  "provider": "cloud",
+  "endpoint": "https://llm.api.cloud.yandex.net/v1",
+  "model": "gpt://b1gpm7458mbu9gglsi63/deepseek-v4-flash/latest",
+  "date": "2026-11-24T22:21:01",
+  "clients": 1,
+  "turns": 2,
+  "ttft_p50_s": 0.37738949999038596,
+  "ttft_p95_s": 0.37738949999038596,
+  "tok_s_avg": 59.835273834728866,
+  "wall_s": 5.135818707989529,
+  "ram_gb": 0.035400390625,
+  "vram_gb": 0,
+  "records": [
+    {
+      "client": 1,
+      "turn": 1,
+      "prompt": "Найди списание на 290 рублей за сентябрь",
+      "ttft_s": 0.6190033339953516,
+      "tok_s": 65.95830778503954,
+      "out_tokens": 211
+    },
+    {
+      "client": 1,
+      "turn": 2,
+      "prompt": "Какой месячный лимит на переводы по карте 4417?",
+      "ttft_s": 0.37738949999038596,
+      "tok_s": 53.71223988441819,
+      "out_tokens": 104
+    }
+  ]
+}
