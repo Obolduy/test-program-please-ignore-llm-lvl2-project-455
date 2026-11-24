@@ -1,38 +1,27 @@
-"""Пул провайдеров модели: облако и локаль под одним контрактом.
-
-    # .env: порядок пула и параметры каждого провайдера
-    LLM_PROVIDER_ORDER=cloud,local
-    LLM_CLOUD_BASE_URL=...   LLM_CLOUD_MODEL=...   LLM_CLOUD_API_KEY=...
-    LLM_LOCAL_BASE_URL=...   LLM_LOCAL_MODEL=...   LLM_LOCAL_STACK=llama.cpp
-
-TODO(провайдеры): реализуйте по контракту, который ждёт контур
-(см. вызовы в app/llm.py, app/planner.py, app/main.py, tests/smoke.py):
-
-  Provider(name, model, client) — cooldown_until, live(), cool_down(),
-    describe() → {"name", "model"} для манифеста прогона батареи (evals/run_evals.py)
-    ретраим только 429 / 5xx / таймаут / сетевую ошибку; 400/401/403 —
-    ошибка вызова, провайдера не меняем; кулдаун LLM_FAILOVER_COOLDOWN_SEC.
-  setup_pool() → список Provider по LLM_PROVIDER_ORDER из .env;
-    провайдер без LLM_<ИМЯ>_* пропускается; пустой пул — SystemExit.
-  resolve(trace_id, agent_id) → Provider: sticky по trace_id — ход
-    живёт на одной модели; без решения — первый живой.
-  run(agent, run_input, *, trace_id, agent_id) → (результат Runner, Provider):
-    OpenAIChatCompletionsModel(model=…, openai_client=…) на копии агента
-    (dataclasses.replace), 429/5xx → следующий провайдер.
-  route_turn(trace_id, message) → track: классификатор трека (малые модели)
-    приклеивает ход к провайдеру; при ROUTING_MODE=off не решает.
-
-Подсказки: клиент — AsyncOpenAI(base_url, api_key,
-http_client=httpx.AsyncClient(trust_env=False, timeout=180)).
-"""
 from __future__ import annotations
 
+import dataclasses
 import json
+import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import httpx
+from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
+
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _cooldown_sec() -> float:
+    return float(os.environ.get("LLM_FAILOVER_COOLDOWN_SEC", "60"))
+
+
+def _retryable(error: Exception) -> bool:
+    if isinstance(error, (APITimeoutError, APIConnectionError)):
+        return True
+    return isinstance(error, APIStatusError) and (error.status_code == 429 or error.status_code >= 500)
 
 
 @dataclass
@@ -42,21 +31,63 @@ class Provider:
     client: Any
     cooldown_until: float = 0.0
 
+    def live(self) -> bool:
+        return time.monotonic() >= self.cooldown_until
+
+    def cool_down(self) -> None:
+        self.cooldown_until = time.monotonic() + _cooldown_sec()
+
+    def describe(self) -> dict:
+        return {"name": self.name, "model": self.model}
+
 
 PROVIDERS: list[Provider] = []
 TRACE_PROVIDERS: dict[str, str] = {}
 
 
+def _build(name: str) -> Provider | None:
+    prefix = f"LLM_{name.upper()}_"
+    base_url = os.environ.get(prefix + "BASE_URL", "")
+    model = os.environ.get(prefix + "MODEL", "")
+    if not base_url or not model:
+        return None
+    client = AsyncOpenAI(
+        base_url=base_url,
+        api_key=os.environ.get(prefix + "API_KEY") or "none",
+        http_client=httpx.AsyncClient(trust_env=False, timeout=180),
+    )
+    return Provider(name, model, client)
+
+
 def setup_pool() -> list[Provider]:
-    raise NotImplementedError("TODO(провайдеры)")
+    order = [n.strip() for n in os.environ.get("LLM_PROVIDER_ORDER", "cloud,local").split(",") if n.strip()]
+    PROVIDERS.clear()
+    for name in order:
+        provider = _build(name)
+        if provider is None:
+            print(f"inference: провайдер {name} пропущен, нет LLM_{name.upper()}_BASE_URL или LLM_{name.upper()}_MODEL")
+            continue
+        PROVIDERS.append(provider)
+    if not PROVIDERS:
+        raise SystemExit("inference: не настроен ни один провайдер")
+    return PROVIDERS
 
 
 def enabled() -> bool:
-    raise NotImplementedError("TODO(провайдеры)")
+    return bool(PROVIDERS)
 
 
 def resolve(trace_id: str, agent_id: str = "") -> Provider:
-    raise NotImplementedError("TODO(провайдеры)")
+    if len(TRACE_PROVIDERS) > 1000:
+        TRACE_PROVIDERS.clear()
+    pinned = TRACE_PROVIDERS.get(trace_id)
+    for provider in PROVIDERS:
+        if provider.name == pinned:
+            return provider
+    chosen = next((p for p in PROVIDERS if p.live()), PROVIDERS[0])
+    if trace_id:
+        TRACE_PROVIDERS[trace_id] = chosen.name
+    return chosen
 
 
 def route_turn(trace_id: str, message: str) -> str:
@@ -64,7 +95,6 @@ def route_turn(trace_id: str, message: str) -> str:
 
 
 def version_of(provider: Provider) -> str:
-    """Версия модельного слоя для провайдера (выпуск: из versions.json)."""
     try:
         data = json.loads((ROOT / "versions.json").read_text(encoding="utf-8"))
         release = data.get("releases", {}).get(data.get("current", ""), {})
@@ -76,4 +106,22 @@ def version_of(provider: Provider) -> str:
 
 
 async def run(agent, run_input, *, trace_id: str = "", agent_id: str = "") -> tuple[Any, Provider]:
-    raise NotImplementedError("TODO(провайдеры)")
+    from agents import OpenAIChatCompletionsModel, Runner
+
+    first = resolve(trace_id, agent_id)
+    queue = [first] + [p for p in PROVIDERS if p is not first and p.live()]
+    last_error: Exception | None = None
+    for provider in queue:
+        model = OpenAIChatCompletionsModel(model=provider.model, openai_client=provider.client)
+        try:
+            result = await Runner.run(dataclasses.replace(agent, model=model), run_input)
+        except Exception as error:
+            if not _retryable(error):
+                raise
+            provider.cool_down()
+            last_error = error
+            continue
+        if trace_id:
+            TRACE_PROVIDERS[trace_id] = provider.name
+        return result, provider
+    raise last_error or RuntimeError("пул провайдеров пуст")
