@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-24T22:58:34",
+  "git_rev": "a5021d3",
+  "battery_version": "1a4ea9c66597",
+  "provider": {
+    "name": "cloud",
+    "model": "gpt://b1gpm7458mbu9gglsi63/deepseek-v4-flash/latest"
+  },
+  "inference": {
+    "temperature": 0.1,
+    "seed": null,
+    "guided": false,
+    "provider_order": [
+      "cloud"
+    ]
+  },
+  "model_version": "",
+  "label": "run",
+  "notes": ""
+}
