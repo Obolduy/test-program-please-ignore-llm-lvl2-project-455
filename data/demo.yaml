@@ -1,0 +1,99 @@
+# Демо-данные банка: сидятся в Postgres командой `make seed` (core/seed.py).
+
+clients:
+  - login: anna
+    sub: u_4f2a
+    name: Анна
+    phone: "+7 900 111-22-33"
+    email: anna@example.ru
+  - login: boris
+    sub: u_9b1c
+    name: Борис
+    phone: "+7 900 444-55-66"
+    email: boris@example.ru
+
+accounts:
+  - account_id: acc_anna_main
+    sub: u_4f2a
+    kind: расчётный
+    title: Основной счёт
+    balance: 84320.55
+  - account_id: acc_anna_savings
+    sub: u_4f2a
+    kind: накопительный
+    title: Вклад «Копилка»
+    balance: 250000.00
+  - account_id: acc_boris_main
+    sub: u_9b1c
+    kind: расчётный
+    title: Основной счёт
+    balance: 3240.10
+
+cards:
+  - card_id: crd_anna_debit
+    sub: u_4f2a
+    account_id: acc_anna_main
+    mask: "4417"
+    product: Дебетовая карта «Всё про»
+    status: active
+    expires: "08/29"
+  - card_id: crd_anna_credit
+    sub: u_4f2a
+    account_id: acc_anna_main
+    mask: "8902"
+    product: Кредитная карта «Лимит»
+    status: active
+    expires: "03/28"
+  - card_id: crd_boris_debit
+    sub: u_9b1c
+    account_id: acc_boris_main
+    mask: "2109"
+    product: Дебетовая карта «Классическая»
+    status: active
+    expires: "11/27"
+
+card_limits:
+  - card_id: crd_anna_debit
+    daily_limit: 50000
+    monthly_limit: 200000
+  - card_id: crd_anna_credit
+    daily_limit: 15000
+    monthly_limit: 60000
+  - card_id: crd_boris_debit
+    daily_limit: 30000
+    monthly_limit: 100000
+
+# Операции за сентябрь 2026 — «объяснимые» списания: комиссии бьются
+# с commission_rules, подписки и переводы узнаваемы в поиске операций.
+transactions:
+  # ── Анна ──
+  - { txn_id: t_a01, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-01 09:12:00+03", amount: 120000, direction: in, merchant: ООО «Ромашка», category: Поступления, description: зарплата за август }
+  - { txn_id: t_a02, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-01 06:00:00+03", amount: 590, direction: out, merchant: Банк «Северный», category: Комиссии, description: обслуживание карты «Всё про» за сентябрь }
+  - { txn_id: t_a03, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-03 18:41:00+03", amount: 1247.50, direction: out, merchant: Пятёрочка, category: Продукты, description: покупки }
+  - { txn_id: t_a04, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-05 08:00:00+03", amount: 399, direction: out, merchant: Кинопоиск, category: Подписки, description: ежемесячная подписка }
+  - { txn_id: t_a05, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-05 08:05:00+03", amount: 299, direction: out, merchant: Музыка, category: Подписки, description: ежемесячная подписка }
+  - { txn_id: t_a06, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-08 14:20:00+03", amount: 1580, direction: out, merchant: Аптека «Здоровье», category: Здоровье, description: лекарства }
+  - { txn_id: t_a07, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-12 13:05:00+03", amount: 3000, direction: out, merchant: Банкомат «Тинг» , category: Наличные, description: снятие наличных, чужой банкомат }
+  - { txn_id: t_a08, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-12 13:05:10+03", amount: 290, direction: out, merchant: Банк «Северный», category: Комиссии, description: снятие в банкомате другого банка }
+  - { txn_id: t_a09, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-15 20:15:00+03", amount: 5000, direction: out, merchant: СБП, category: Переводы, description: перевод Ивану К. }
+  - { txn_id: t_a10, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-18 19:02:00+03", amount: 2340, direction: out, merchant: Азбука Вкуса, category: Продукты, description: покупки }
+  - { txn_id: t_a11, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-22 12:47:00+03", amount: 760, direction: out, merchant: Кафе «Бублик», category: Кафе и рестораны, description: обед }
+  - { txn_id: t_a12, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-25 09:30:00+03", amount: 120, direction: out, merchant: Метро, category: Транспорт, description: проезд }
+  - { txn_id: t_a13, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-28 21:11:00+03", amount: 4990, direction: out, merchant: Ozon, category: Покупки, description: заказ 412-987 }
+  - { txn_id: t_a14, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-09-20 16:40:00+03", amount: 8990, direction: out, merchant: Технопарк, category: Покупки, description: покупка по кредитной карте •8902 }
+  - { txn_id: t_a15, sub: u_4f2a, account_id: acc_anna_main, ts: "2026-08-30 10:00:00+03", amount: 550, direction: out, merchant: Пятёрочка, category: Продукты, description: покупки в августе }
+  # ── Борис ──
+  - { txn_id: t_b01, sub: u_9b1c, account_id: acc_boris_main, ts: "2026-09-02 10:00:00+03", amount: 45000, direction: in, merchant: ООО «Вектор», category: Поступления, description: зарплата }
+  - { txn_id: t_b02, sub: u_9b1c, account_id: acc_boris_main, ts: "2026-09-10 19:25:00+03", amount: 2800, direction: out, merchant: Супермаркет «Восход», category: Продукты, description: покупки }
+  - { txn_id: t_b03, sub: u_9b1c, account_id: acc_boris_main, ts: "2026-09-17 12:00:00+03", amount: 150, direction: out, merchant: Мобильная связь, category: Связь, description: пополнение телефона }
+
+commission_rules:
+  - { rule_id: card_fee_pro, product: Дебетовая карта «Всё про», code: card_fee_monthly, description: "обслуживание карты — 590 ₽/мес, списывается 1-го числа; бесплатно при покупках от 75 000 ₽ за месяц", amount_rub: 590 }
+  - { rule_id: card_fee_classic, product: Дебетовая карта «Классическая», code: card_fee_monthly, description: "обслуживание карты — 199 ₽/мес, списывается 1-го числа; бесплатно при покупках от 30 000 ₽ за месяц", amount_rub: 199 }
+  - { rule_id: atm_out_fee, product: все, code: atm_other_bank, description: "снятие наличных в банкоматах других банков — 290 ₽ за операцию; в банкоматах банка «Северный» — бесплатно", amount_rub: 290 }
+  - { rule_id: transfer_over_limit, product: все, code: transfer_over_monthly_limit, description: "перевод сверх месячного лимита — 0.5% от суммы превышения", amount_rub: null }
+  - { rule_id: credit_cash_fee, product: Кредитная карта «Лимит», code: cash_withdrawal, description: "снятие наличных с кредитной карты — 390 ₽ + 3.9% от суммы; льготный период на снятие не действует", amount_rub: 390 }
+
+tickets:
+  - { id: t_1001, sub: u_4f2a, subject: кешбэк за август, note: "Начислили 340 ₽, а по условиям должно быть 570 ₽.", status: open }
+  - { id: t_1002, sub: u_4f2a, subject: вопрос по лимитам, note: "Хотела понять, как считаются месячные лимиты переводов.", status: resolved }

@@ -1,0 +1,9 @@
+# Справка по продукту: условия из базы знаний, с источником.
+name: 20_kb_card_terms
+user: anna
+turns:
+  - say: какие условия у кредитной карты?
+    expect:
+      plan_has: [kb]
+      reply_contains: ["источник"]
+      card: false

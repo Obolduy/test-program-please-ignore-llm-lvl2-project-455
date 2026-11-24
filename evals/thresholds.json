@@ -1,0 +1,8 @@
+{
+  "outcome_pass": {"min_ratio": 0.875},
+  "tool_hit_rate": {"min_ratio": 0.875},
+  "schema_validity": {"min_ratio": 1.0},
+  "refusal_accuracy": {"min_ratio": 1.0},
+  "baseline_run": "",
+  "_comment": "Порог выставляется от baseline облачного провайдера (батарея): сначала прогон на облаке, полученные доли — порог для остальных провайдеров. 0.875 = 7 из 8 в пересчёте на долю; при 12 сценариях гейт прощает один промах по outcome и tool."
+}

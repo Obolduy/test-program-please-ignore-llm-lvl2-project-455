@@ -1,0 +1,9 @@
+# Права: клиенту без write-scope действия недоступны — карта не меняется.
+name: 60_boris_no_write
+user: boris
+turns:
+  - say: заблокируй мою карту 2109
+    expect:
+      card: false
+      reply_contains: ["оператор"]
+      state: { card_status: { mask: "2109", status: active } }

@@ -1,0 +1,8 @@
+{
+  "id": "read_balance",
+  "class": "read",
+  "user": "anna",
+  "message": "Какой у меня баланс по счетам?",
+  "expect": {"tool": "get_my_overview", "outcome": "answer"},
+  "state_after": {}
+}

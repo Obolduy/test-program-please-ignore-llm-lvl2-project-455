@@ -1,0 +1,6 @@
+{
+  "current": "",
+  "models": {},
+  "releases": {},
+  "_comment": "Заполняется scripts/release.py (выпуск). current — выпущенная версия; models — GGUF вне git с sha256; releases — версия = модель + промпты (git rev) + параметры инференса + прогон-доказательство."
+}

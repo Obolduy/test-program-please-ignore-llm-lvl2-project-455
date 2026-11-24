@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+audit.jsonl
+policy_decisions.jsonl
+nohup.out
+models/
+versions.local.json
+data/finetune/capture/
+data/finetune/_collected.jsonl
+data/finetune/_generated.jsonl
+data/finetune/sharegpt.json

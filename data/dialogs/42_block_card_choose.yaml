@@ -1,0 +1,8 @@
+# Неоднозначная просьба: карт несколько, ассистент уточняет, а не угадывает.
+name: 42_block_card_choose
+user: anna
+turns:
+  - say: заблокируй мою карту
+    expect:
+      card: false
+      reply_not_contains: ["отово"]

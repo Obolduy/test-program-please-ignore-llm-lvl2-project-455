@@ -1,0 +1,15 @@
+#!/bin/sh
+# Гейт перед push: батарея на активном провайдере должна быть зелёной.
+# Обход (осознанный): SKIP_GATE=1 git push — увидим в истории прогона.
+if [ "${SKIP_GATE:-}" = "1" ]; then
+  echo "pre-push: гейт пропущен (SKIP_GATE=1)"
+  exit 0
+fi
+echo "pre-push: гейт eval-батареи…"
+if ! make gate; then
+  echo ""
+  echo "гейт красный — push отменён."
+  echo "почему красный: runs/last/report.md"
+  echo "обход (осознанно): SKIP_GATE=1 git push"
+  exit 1
+fi

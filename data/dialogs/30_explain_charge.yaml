@@ -1,0 +1,9 @@
+# Объяснение списания: операция + правило комиссии + источник.
+name: 30_explain_charge
+user: anna
+turns:
+  - say: почему списали 590 рублей за обслуживание карты?
+    expect:
+      plan_has: [ops, kb]
+      reply_contains: ["590", "источник"]
+      card: false

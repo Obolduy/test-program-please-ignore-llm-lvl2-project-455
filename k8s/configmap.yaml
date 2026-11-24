@@ -1,0 +1,27 @@
+# Конфиг vLLM — часть версии модельного слоя. Монтируется в под как
+# /etc/vllm/config.yaml (см. deployment.yaml). Смена конфига = перечитать
+# в подах:
+#   kubectl apply -f configmap.yaml && kubectl rollout restart deployment/vllm
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-config
+data:
+  config.yaml: |
+    # vllm serve --config-file /etc/vllm/config.yaml
+    model: Qwen/Qwen3-4B
+    served-model-name: qwen3-4b          # это же имя — в .env (LLM_LOCAL_MODEL)
+    max-model-len: 8192                  # окно: слот = окно × KV-байт на токен
+    gpu-memory-utilization: 0.9          # бюджет VRAM: веса + KV
+    max-num-seqs: 8                      # слоты = клиенты в батче
+    enable-prefix-caching: true          # общий префикс не пересчитывается
+    # Без двух строк ниже tool calls агентов контура не работают.
+    enable-auto-tool-choice: true
+    tool-call-parser: hermes             # Qwen3 → hermes
+
+    # Карта на 24 ГБ VRAM — та же полоса крупнее; память проверяйте
+    # расчётом M = W + KV + A + O из замеров провайдеров:
+    # model: Qwen/Qwen3-8B
+    # served-model-name: qwen3-8b
+    # max-model-len: 16384
+    # max-num-seqs: 32

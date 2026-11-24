@@ -1,0 +1,7 @@
+{
+  "id": "kb_card_terms",
+  "class": "kb",
+  "user": "anna",
+  "message": "Какие условия у кредитной карты «Лимит»?",
+  "expect": {"tool": "search_kb", "outcome": "answer"}
+}

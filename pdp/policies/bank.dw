@@ -1,0 +1,104 @@
+// Политики write-пути агента банковского приложения (Dogwood: Cedar + temporal).
+//
+// Те же правила, что вручную держат allowlist и барьеры оркестратора,
+// здесь выражены декларативно. Семантика Cedar сохранена: deny by default,
+// forbid перекрывает permit.
+
+// ── 1. Подготовка действия: клиент с нужным scope, guard на ходу, ─────────
+// идентичность — не аргумент. Роль задаёт, scope сужает, причём у каждого
+// действия свой scope: блокировка карты — cards:write, лимит —
+// limits:write, контакты — contacts:write. guard_ok — verdikt
+// guardrail-сервиса этого хода: без пройденной проверки действие не
+// готовится (fail-closed). Identity-ключи в аргументах не существуют —
+// guard ловит попытку протащить их.
+@id("permit_prepare_client")
+permit (
+    principal,
+    action == Bank::Action::"Prepare",
+    resource
+)
+when {
+    context.input.role == "client"
+    && context.input.guard_ok
+    && !(context.input has "user_id")
+    && !(context.input has "client_id")
+    && !(context.input has "sub_argument")
+    && (
+        (context.input.action == "block_card" && context.input.scopes.contains("cards:write"))
+        || (context.input.action == "set_transfer_limit" && context.input.scopes.contains("limits:write"))
+        || (context.input.action == "contacts_update" && context.input.scopes.contains("contacts:write"))
+    )
+};
+
+// ── 2. «Да» — только по реально подготовленной карточке («да — что да?») ──
+// Подтверждение принимается, если та же карточка (pending_id) была
+// подготовлена в окне. Оговорка стенда: PyO3-биндинг dogwood-py не
+// передаёт таймстемпы живых событий (все ts=0), поэтому в живом режиме
+// окно не закрывается, и TTL карточки дополнительно проверяет сам PDP;
+// честная семантика окна закрыта replay-проверками smoke.
+@id("permit_confirm_after_prepare")
+permit (
+    principal,
+    action == Bank::Action::"ConfirmCard",
+    resource
+)
+when {
+    context.input.role == "client"
+    && context.input.guard_ok
+    && !(context.input has "user_id")
+    && !(context.input has "client_id")
+    && (
+        (context.input.action == "block_card" && context.input.scopes.contains("cards:write"))
+        || (context.input.action == "set_transfer_limit" && context.input.scopes.contains("limits:write"))
+        || (context.input.action == "contacts_update" && context.input.scopes.contains("contacts:write"))
+    )
+}
+when temporal {
+    formerly within 1h Bank::Action::"Prepare"::request{
+        input.pending_id: context.input.pending_id
+    }
+};
+
+// ── 3. Исполнение: только после подтверждения той же карточки ──
+@id("permit_execute_confirmed")
+permit (
+    principal,
+    action == Bank::Action::"Execute",
+    resource
+)
+when {
+    context.input.role == "client"
+    && context.input.guard_ok
+    && !(context.input has "user_id")
+    && !(context.input has "client_id")
+    && (
+        (context.input.action == "block_card" && context.input.scopes.contains("cards:write"))
+        || (context.input.action == "set_transfer_limit" && context.input.scopes.contains("limits:write"))
+        || (context.input.action == "contacts_update" && context.input.scopes.contains("contacts:write"))
+    )
+}
+when temporal {
+    formerly within 1h Bank::Action::"ConfirmCard"::request{
+        input.pending_id: context.input.pending_id
+    }
+};
+
+// ── 4. Лимит: не более двух операций изменения данных за окно сессии ──
+// Считаем request-события, а не responses (по статье AWS: так лимит
+// держит и конкурентные вызовы); окно 24h на per-session authorizer'е —
+// это вся история сессии. Третий запрос (count вместе с текущим = 3)
+// отклонён. Лимит общий для всех write-действий: в банковском контуре
+// серия изменений данных — сигнал компрометации сессии.
+@id("forbid_write_limit")
+forbid (
+    principal,
+    action == Bank::Action::"Execute",
+    resource
+)
+when temporal {
+    count_within(24h, Bank::Action::"Execute"::request{}) > 2
+};
+
+// ── 5. Всё остальное — deny by default ──
+// Оператору (role=operator) write-действия не разрешены вовсе — нет
+// подходящего permit.

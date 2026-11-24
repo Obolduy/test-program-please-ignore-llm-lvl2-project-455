@@ -1,0 +1,9 @@
+# Чтение: баланс по счетам через агента данных.
+name: 10_read_balance
+user: anna
+turns:
+  - say: какой у меня баланс по счетам?
+    expect:
+      plan_has: [data]
+      reply_contains: ["счет"]
+      card: false

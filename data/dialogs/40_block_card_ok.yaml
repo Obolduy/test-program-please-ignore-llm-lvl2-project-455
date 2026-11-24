@@ -1,0 +1,12 @@
+# Блокировка карты end-to-end: подготовка → карточка → «да» → исполнение.
+name: 40_block_card_ok
+user: anna
+turns:
+  - say: заблокируй карту 4417
+    expect:
+      plan_has: [actions]
+      card: true
+  - say: да
+    expect:
+      reply_contains: ["отово"]
+      state: { card_status: { mask: "4417", status: blocked } }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Банк «Северный» — чат поддержки</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">Банк «Северный»</div>
+  <nav>
+    <label>Пользователь:
+      <select id="user">
+        <option value="anna">Анна (клиент, есть права на действия)</option>
+        <option value="boris">Борис (клиент, только чтение)</option>
+        <option value="olga">Ольга (оператор)</option>
+      </select>
+    </label>
+    <a href="/operator.html" target="_blank">Страница оператора</a>
+  </nav>
+</header>
+
+<main>
+  <aside id="side">
+    <div class="statusline">
+      <span id="session-state">сессия не открыта</span>
+      <span id="session-sub"></span>
+    </div>
+    <div class="hint">
+      Спросите: «какой у меня баланс», «почему списание 590 за обслуживание»,
+      «заблокируй карту 4417», «подними месячный лимит до 300 тысяч»,
+      «обнови телефон», «позови оператора».
+    </div>
+    <div id="tools"></div>
+  </aside>
+
+  <section id="chat">
+    <div id="log"></div>
+    <form id="form" autocomplete="off">
+      <input id="text" placeholder="Сообщение…" disabled>
+      <button id="send" type="submit" disabled>Отправить</button>
+    </form>
+  </section>
+</main>
+
+<script src="/config.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Справочный CI: гейт батареи на merge request.
+# У студента без GitLab ту же роль играют .githooks/pre-push (make hooks)
+# и release-скрипт, который не ставит тег без зелёного runs/last.
+eval-gate:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - pip install -r requirements.txt
+    - cp .env.example .env       # в реальном проекте — переменные CI
+    - make infra && make migrate && make seed
+    - make stand > /dev/null 2>&1 &
+    - make pdp > /dev/null 2>&1 &
+    - make guardrail > /dev/null 2>&1 &
+    - make actions > /dev/null 2>&1 &
+    - make api > /dev/null 2>&1 &
+    - sleep 10
+    - make gate
+  artifacts:
+    when: always
+    paths:
+      - runs/last/

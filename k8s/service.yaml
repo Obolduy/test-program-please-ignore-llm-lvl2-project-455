@@ -1,0 +1,13 @@
+# Единый адрес реплик внутри кластера: http://vllm
+# Трафик делится только между готовыми репликами (readinessProbe в deployment.yaml).
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm
+spec:
+  type: ClusterIP
+  selector:
+    app: vllm
+  ports:
+  - port: 80            # снаружи кластера сюда ведёт port-forward: 8001:80
+    targetPort: 8000    # (порт 8000 хоста занят backend контура — см. .env)

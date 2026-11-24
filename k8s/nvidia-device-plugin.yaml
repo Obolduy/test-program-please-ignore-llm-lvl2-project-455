@@ -1,0 +1,34 @@
+# NVIDIA device plugin — раздатчик ресурса: без него узел не объявляет
+# nvidia.com/gpu, и под с limits: nvidia.com/gpu: 1 висит в Pending.
+# Скопирован из upstream (nvcr.io/nvidia/k8s-device-plugin, пин v0.17.0).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvidia-device-plugin-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: nvidia-device-plugin-ds
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: nvidia-device-plugin-ds
+    spec:
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      priorityClassName: system-node-critical
+      containers:
+      - image: nvcr.io/nvidia/k8s-device-plugin:v0.17.0
+        name: nvidia-device-plugin-ctr
+        volumeMounts:
+        - name: device-plugin
+          mountPath: /var/lib/kubelet/device-plugins
+      volumes:
+      - name: device-plugin
+        hostPath:
+          path: /var/lib/kubelet/device-plugins

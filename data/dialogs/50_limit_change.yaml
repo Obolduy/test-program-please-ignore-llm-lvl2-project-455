@@ -1,0 +1,12 @@
+# Изменение лимита: нормализация «300 тысяч» → карточка → «да» → исполнение.
+name: 50_limit_change
+user: anna
+turns:
+  - say: подними месячный лимит на переводы до 300 тысяч на карте 4417
+    expect:
+      plan_has: [actions]
+      card: true
+  - say: да
+    expect:
+      reply_contains: ["отово"]
+      state: { limit: { mask: "4417", period: monthly, amount: 300000 } }

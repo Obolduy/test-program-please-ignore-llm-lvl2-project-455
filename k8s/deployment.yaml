@@ -1,0 +1,47 @@
+# Инференс как сервис: Deployment держит реплику vLLM, Service (service.yaml)
+# пускает трафик только в готовые. Параметры запуска — часть версии:
+# образ + конфиг из configmap.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+spec:
+  replicas: 1                # на одной GPU-машине — 1 реплика
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0      # старая реплика гасится только после готовности новой
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:v0.10.2   # версия = тег образа
+        # args дописываются к entrypoint образа (api_server / vllm serve)
+        args: ["--config-file", "/etc/vllm/config.yaml"]
+        ports:
+        - containerPort: 8000
+        readinessProbe:                   # больная — вне ротации Service
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30         # модель грузится в память не мгновенно
+        resources:
+          limits:
+            # Имя GPU-ресурса зависит от вендора: NVIDIA — nvidia.com/gpu,
+            # AMD/ROCm — amd.com/gpu (другой device plugin и образ vLLM),
+            # Apple — GPU-ресурса в Kubernetes нет. Этот манифест — NVIDIA.
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: config
+          mountPath: /etc/vllm
+      volumes:
+      - name: config
+        configMap:
+          name: vllm-config
