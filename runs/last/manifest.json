@@ -1,16 +1,17 @@
 {
-  "date": "2026-11-24T22:58:34",
-  "git_rev": "a5021d3",
+  "date": "2026-11-24T23:13:05",
+  "git_rev": "7a63ede",
   "battery_version": "1a4ea9c66597",
   "provider": {
-    "name": "cloud",
-    "model": "gpt://b1gpm7458mbu9gglsi63/deepseek-v4-flash/latest"
+    "name": "local",
+    "model": "google/gemma-4-e4b"
   },
   "inference": {
     "temperature": 0.1,
     "seed": null,
     "guided": false,
     "provider_order": [
+      "local",
       "cloud"
     ]
   },
