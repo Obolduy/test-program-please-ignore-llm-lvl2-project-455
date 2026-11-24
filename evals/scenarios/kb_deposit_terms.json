@@ -1,0 +1,7 @@
+{
+  "id": "kb_deposit_terms",
+  "class": "kb",
+  "user": "anna",
+  "message": "Как устроен вклад и что будет, если снять деньги раньше срока?",
+  "expect": {"tool": "search_kb", "outcome": "answer"}
+}

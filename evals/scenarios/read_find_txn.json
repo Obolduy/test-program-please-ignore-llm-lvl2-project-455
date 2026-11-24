@@ -1,0 +1,11 @@
+{
+  "id": "read_find_txn",
+  "class": "read",
+  "user": "anna",
+  "message": "Найди мои операции за сентябрь на сумму 290 рублей",
+  "expect": {
+    "tool_any": ["find_transactions", "list_recent_transactions"],
+    "outcome": "answer"
+  },
+  "state_after": {}
+}

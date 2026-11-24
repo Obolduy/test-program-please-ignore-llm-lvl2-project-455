@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-24T22:54:18",
+  "git_rev": "4a5c11b",
+  "battery_version": "1a4ea9c66597",
+  "provider": {
+    "name": "local",
+    "model": "google/gemma-4-e4b"
+  },
+  "inference": {
+    "temperature": 0.1,
+    "seed": null,
+    "guided": false,
+    "provider_order": [
+      "local"
+    ]
+  },
+  "model_version": "",
+  "label": "local-gemma-e4b-v2",
+  "notes": ""
+}

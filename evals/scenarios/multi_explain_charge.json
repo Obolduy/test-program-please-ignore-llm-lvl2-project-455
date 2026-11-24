@@ -1,0 +1,11 @@
+{
+  "id": "multi_explain_charge",
+  "class": "multi",
+  "user": "anna",
+  "message": "Почему в сентябре списали 590 рублей за обслуживание карты?",
+  "expect": {
+    "tools": ["search_kb"],
+    "tool_any": ["find_transactions", "list_recent_transactions"],
+    "outcome": "answer"
+  }
+}

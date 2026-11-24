@@ -1,0 +1,7 @@
+{
+  "id": "multi_card_terms",
+  "class": "multi",
+  "user": "anna",
+  "message": "Какие у меня есть карты и какой у кредитной из них льготный период?",
+  "expect": {"tools": ["get_my_cards", "search_kb"], "outcome": "answer"}
+}

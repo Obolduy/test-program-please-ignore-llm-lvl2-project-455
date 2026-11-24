@@ -1,0 +1,8 @@
+{
+  "id": "read_limits",
+  "class": "read",
+  "user": "anna",
+  "message": "Какие лимиты стоят на моей дебетовой карте 4417?",
+  "expect": {"tool": "get_card_limits", "args": {"mask": "4417"}, "outcome": "answer"},
+  "state_after": {}
+}
